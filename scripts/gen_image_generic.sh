@@ -16,7 +16,11 @@ ALIGN="$6"
 rm -f "$OUTPUT"
 
 # shellcheck disable=2046
-set $(ptgen -o "$OUTPUT" -h 16 -s 63 -t 0xef -p "${KERNELSIZE}m" -t 0x83 -p "${ROOTFSSIZE}m" ${ALIGN:+-l "$ALIGN"} ${SIGNATURE:+-S "0x$SIGNATURE"})
+set $(ptgen -o "$OUTPUT" -h 16 -s 63 \
+	-t 0xef -p "${KERNELSIZE}m" \
+	-t 0x83 -p "${ROOTFSSIZE}m" \
+	-t 0x83 -p "${ROOTFSSIZE}m" \
+	${SIGNATURE:+-S "0x$SIGNATURE"} ${ALIGN:+-l "$ALIGN"})
 
 KERNELOFFSET="$(($1 / 512))"
 KERNELCOUNT="$(($2 / 1024))" # mkfs.fat BLOCK_SIZE=1024
