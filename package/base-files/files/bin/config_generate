@@ -75,7 +75,22 @@ generate_network() {
 	# force bridge for multi-interface devices (and lan)
 	case "$1:$ifname" in
 		*\ * | lan:*) type="bridge" ;;
+		# hack (see /etc/board.d/02_network)
+		none:*) return ;;
+		wan*:*) protocol="dhcp" ;;
 	esac
+
+	if [ -n "$macaddr" ]; then
+		uci -q batch <<-EOF
+		delete network.${1}_dev
+		set network.${1}_dev='device'
+		set network.${1}_dev.name='$1'
+		set network.${1}_dev.type='macvlan'
+		set network.${1}_dev.ifname='$ifname'
+		set network.${1}_dev.macaddr='$macaddr'
+		EOF
+		ifname=$1
+	fi
 
 	uci -q batch <<-EOF
 		delete network.$1
@@ -83,13 +98,6 @@ generate_network() {
 		set network.$1.type='$type'
 		set network.$1.ifname='$ifname'
 		set network.$1.proto='none'
-	EOF
-
-	[ -n "$macaddr" ] && uci -q batch <<-EOF
-		delete network.$1_dev
-		set network.$1_dev='device'
-		set network.$1_dev.name='$ifname'
-		set network.$1_dev.macaddr='$macaddr'
 	EOF
 
 	case "$protocol" in
